@@ -166,7 +166,7 @@ Validated and passed to RPA for execution.
 
 * Python 3.14
 * `openpyxl`
-* `ffmpeg` (optional, for recording)
+* `ffmpeg` (optional, for screen recording)
 
 ---
 
