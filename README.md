@@ -52,7 +52,7 @@ They communicate through a file-based IPC mechanism (`handover.json`).
 
 ## Architecture
 
-<img width="1156" height="1921" alt="workflow" src="https://github.com/user-attachments/assets/aadd3936-756c-42f3-9d8a-333dd48fbbf0" />
+<img width="1156" height="1921" alt="workflow" src="https://github.com/user-attachments/assets/efeeebb2-151d-47a3-a575-f1ecb372fe21" />
 
 The diagram shows how:
 
