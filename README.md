@@ -8,7 +8,7 @@ A lightweight local orchestrator for email- and data-driven automation, delegati
 
 This project is a lightweight local RPA orchestrator written in Python.
 
-It is designed as an alternative to enterprise orchestrators,
+It is designed as a small-scale local alternative to enterprise orchestrators,
 focusing on clarity, ease of modification, and running on a single machine.
 
 It does NOT replace RPA tools.
@@ -203,15 +203,12 @@ recordings/
 * Minimal error recovery (by design)
 
 ---
-
-## Why not just use Robot Framework?
-
-| Robot Framework                    | LocalRPA Orchestrator          |
-| ---------------------------------- | ------------------------------ |
-| Scalable test/automation framework | Lightweight local orchestrator |
-| Requires setup/integration         | Runs on a single machine       |
-| Code-driven automation             | Combines email + RPA tools     |
-| General-purpose                    | Business-triggered workflows   |
+## How it compares
+| Tool / category                          | Primary role                                                                | How this project differs                                                                                       |
+| ---------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Robot Framework**                      | Executes automation/test logic                                              | This project focuses on intake, decision logic, audit, job state, and handover to an external RPA tool         |
+| **Airflow-style workflow orchestrators** | Orchestrate scheduled/data workflows across tasks and systems               | This project is much smaller, local-first, and designed around business-triggered jobs plus screen-based RPA   |
+| **Enterprise RPA orchestrators**         | Centralized control of bots, queues, schedules, credentials, and monitoring | This project intentionally avoids that scope and runs on a single machine with simple file- and DB-based state |
 
 ---
 
@@ -237,4 +234,4 @@ Early-stage / experimental, but functional.
 
 ---
 
-readme written by AI
+I got help from AI writing this readme
