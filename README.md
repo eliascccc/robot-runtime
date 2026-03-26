@@ -202,19 +202,9 @@ recordings/
 * Pilot / proof-of-concept automation
 
 ---
-
-## Limitations
-
-* Not designed for large-scale orchestration
-* No distributed execution
-* File-based IPC only
-* Minimal error recovery (by design)
-
-
----
 ## Why not just use X?
 
-### Why not just use RPA for everything?
+#### Why not just use RPA for everything?
 
 You can — but it tends to lead to:
 
@@ -224,7 +214,7 @@ You can — but it tends to lead to:
 
 ---
 
-### Why not just use Python for everything?
+#### Why not just use Python for everything?
 
 Python is great for logic and data processing, but:
 
@@ -233,21 +223,16 @@ Python is great for logic and data processing, but:
 
 ---
 
-### Why not use an enterprise orchestrator?
+#### Why not use an enterprise orchestrator?
 
 Enterprise orchestrators (e.g. UiPath Orchestrator, Control Room):
 
 * Require infrastructure, setup, and licensing
 * Are designed for large-scale, multi-bot environments
 
-This project is intentionally:
-
-* Designed for small teams (≈5–10 users)
-* Able to run on a single machine without admin rights
-
 ---
 
-### Why not use a workflow orchestrator?
+#### Why not use a workflow orchestrator?
 
 Workflow tools (e.g. Airflow, Prefect) are built for:
 
@@ -259,9 +244,19 @@ This project instead focuses on:
 
 * Business-triggered jobs (email, ERP signals)
 * Tight coupling to UI automation (via RPA)
-* Simple, deterministic state handling on a single machine
 
 ---
+
+## Limitations
+
+* Not designed for large-scale orchestration
+* No distributed execution
+* File-based IPC only
+* Minimal error recovery (by design)
+
+
+---
+
 ## License
 
 MIT (recommended)
