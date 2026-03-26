@@ -18,14 +18,25 @@ you still need a real RPA tool (Power Automate, UiPath Studio, Blue Prism, etc.)
 to perform screen-based automation. Think of this as the control around the RPA — not the robot itself.
 
 ---
+## Responsibilities
 
+| Step | Orchestrator (this project) | RPA tool |
+| ---- |:--------------------------:|:----------:|
+| Job intake| ✓ |  |
+| Handover | → | ✓ |
+| Job execution |  | ✓ |
+| Handover | ✓ | ← |
+| Job verification | ✓ |  |
+
+
+---
 
 ## Typical examples
 
-### Email-triggered job
+### Email-driven job
 A user sends an email → Python validates and prepares the job → writes to `handover.json` → RPA executes UI actions → Python verifies and responds.
 
-### Data-triggered job
+### Data-driven job
 Python polls a data source → detects a valid case → prepares payload → signals RPA → RPA executes → Python verifies the outcome.
 
 
@@ -35,37 +46,21 @@ Example dashboard during runtime:
 ---
 
 ## Key Idea
+This project separates responsibilities between the Orchestrator and the RPA tool:
 
-This project separates responsibilities:
-
-* The **Orchestrator (this project)** handles
-
-  * job intake (email / data)
-  * validation
-  * decision logic
-  * audit logging
-  * system control
+* The **Orchestrator (this project)** handles:
+  - how jobs enter the system (e.g. via email)
+  - how jobs are discovered autonomously (e.g. queries or data sources)
+  - access control and validation
+  - job state tracking and audit logging
+  - preparing payloads and handing work over to an RPA tool
+  - verifying results after execution
+  - handling failures and entering a controlled safestop state
 
 * The **RPA tool** handles:
-
-  * clicks
-  * keyboard input
-  * ERP/UI interaction
+  - UI automation (clicks, keyboard input, ERP/UI interaction)
 
 They communicate through a file-based IPC mechanism (`handover.json`).
-
----
-## What this project does in more detail
-
-The orchestration is responsible for:
-
-* how jobs enter the system (e.g. via email)
-* how jobs are discovered autonomously (e.g. queries or data sources)
-* access control and validation
-* job state tracking and audit logging
-* preparing payloads and handing work over to an external RPA tool
-* verifying results after execution
-* handling failures and entering a controlled safestop state
 
 ---
 
@@ -75,14 +70,14 @@ You still need a real RPA tool to execute UI automation steps.
 
 This includes tools such as:
 
-* UiPath Studio
 * Microsoft Power Automate
+* UiPath Studio
 * Blue Prism
 * Robot Framework
-* RPA for Python
 * TagUI
+* RPA for Python
 
-These tools execute the actual automation steps (clicks, keyboard input, screen interaction, etc.).
+These tools perform the actual UI interactions (clicks, keyboard input, screen automation).
 
 ---
 
@@ -180,7 +175,7 @@ python main.py
 Use included dev tools:
 
 * `fake_jobs_generator.py`
-* `frontend_rpa_simulator.py`
+* `rpa_tool_simulator.py`
 
 ---
 
