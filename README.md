@@ -1,6 +1,6 @@
 # LocalRPA Orchestrator
 
-A lightweight local orchestrator that bridges business triggers and screen-based RPA.
+A lightweight orchestrator that keeps logic in Python and delegates UI work to RPA tools.
 
 ---
 
@@ -8,7 +8,7 @@ A lightweight local orchestrator that bridges business triggers and screen-based
 
 This project is a mini RPA orchestrator written in Python.
 
-It is designed as a small-scale alternative where enterprise orchestrators would be unnecessary overhead,
+It is designed as a lightweight alternative where enterprise orchestrators would be unnecessary overhead,
 focusing on clarity, ease of modification, and running on a single machine.
 
 It does NOT replace RPA tools.
@@ -22,9 +22,12 @@ to perform screen-based automation.
 
 ## Typical examples
 
-In an email-driven flow, a user sends a request to the robot. The orchestrator reads the request, validates the input, prepares the required payload, and writes the handover state. The front-end RPA tool then picks up the job and performs the UI actions.
+### Email-triggered job
+A user sends an email → Python validates and prepares the job → writes to `handover.json` → RPA executes UI actions → Python verifies and responds.
 
-Another common trigger is data-driven. In that case, the orchestrator discovers work by polling a query or another data source. When it finds a valid case, it prepares the required values and signals the front-end RPA to execute the task.
+### Data-driven job
+Python polls a data source → detects a valid case → prepares payload → signals RPA → RPA executes → Python verifies the outcome.
+
 
 Example dashboard during runtime:
 <img width="1209" height="635" alt="example_dash" src="https://github.com/user-attachments/assets/dc12a84b-c329-4b91-b402-387128197f9a" />
@@ -55,8 +58,7 @@ They communicate through a file-based IPC mechanism (`handover.json`).
 
 ## Architecture
 
-<img width="1140" height="1709" alt="workflow" src="https://github.com/user-attachments/assets/8c94348e-be80-4a39-bc64-226e38f67167" />
-
+<img width="1140" height="1709" alt="workflow" src="https://github.com/user-attachments/assets/9f66751f-2356-43d3-a8fc-51450e34a654" />
 
 The diagram defines the interaction:
 
@@ -64,7 +66,7 @@ The diagram defines the interaction:
 * Both operate in their own loops
 * State is synchronized via handover.json
 * Failures transition the system into safestop
-* Your front-end RPA tool should follow this model
+* Your front-end RPA tool must follow this model
 
 
 ## Features
@@ -83,17 +85,6 @@ The diagram defines the interaction:
 
 ---
 
-## Design Principles
-
-* **Simplicity over scalability**
-* **Local-first execution**
-* **Fail fast and visibly**
-* **Deterministic job lifecycle**
-* **Minimal dependencies and infrastructure**
-* **Transparent state (file + database)**
-* **Cheap to deploy and operate**
-
----
 
 ## Job Sources
 
@@ -120,15 +111,6 @@ Jobs are tracked in SQLite (`job_audit.db`) with clear states:
 
 ---
 
-## Handover concept
-
-The system uses a file-based "handover" mechanism to transfer control between the Python orchestrator and the external RPA.
-
-The handover file represents both:
-- the current system state
-- and the payload required for the next execution step
-
----
 
 ## Email Pipeline
 
@@ -204,25 +186,58 @@ recordings/
 * Minimal error recovery (by design)
 
 ---
-## How it compares
-| Tool / category                          | Primary role                                                                | How this project differs                                                                                       |
-| ---------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Robot Framework**                      | Executes automation/test logic                                              | This project focuses on intake, decision logic, audit, job state, and handover to an external RPA tool         |
-| **Airflow-style workflow orchestrators** | Orchestrate scheduled/data workflows across tasks and systems               | This project is much smaller, local-first, and designed around business-triggered jobs plus screen-based RPA   |
-| **Enterprise RPA orchestrators**         | Centralized control of bots, queues, schedules, credentials, and monitoring | This project intentionally avoids that scope and runs on a single machine with simple file- and DB-based state |
+## Why not just use X?
+
+### Why not just use RPA for everything?
+
+You can — but it tends to lead to:
+
+* Business logic spread across visual workflows
+* Difficult testing and debugging
+* Fragile automations that break on small UI changes
 
 ---
 
-## Philosophy
+### Why not just use Python for everything?
 
-This is not a full RPA platform.
-It is the simplest possible layer between:
+Python is great for logic and data processing, but:
 
-* business triggers (email/data)
-* and UI automation (RPA tools)
+* It cannot reliably interact with arbitrary GUIs
+* Many business systems (ERP, legacy apps) require UI automation
 
 ---
 
+### Why not use an enterprise orchestrator?
+
+Enterprise orchestrators (e.g. UiPath Orchestrator, Control Room):
+
+* Require infrastructure, setup, and licensing
+* Are designed for large-scale, multi-bot environments
+
+This project is intentionally:
+
+* Local-first
+* Lightweight
+* Designed for small teams (≈5–10 users)
+* Able to run on a single machine without admin rights
+
+---
+
+### Why not use a workflow orchestrator (e.g. :contentReference[oaicite:0]{index=0})?
+
+Workflow tools are built for:
+
+* Scheduled pipelines
+* Data engineering workflows
+* Distributed task execution
+
+This project instead focuses on:
+
+* Business-triggered jobs (email, ERP signals)
+* Tight coupling to UI automation (via RPA)
+* Simple, deterministic state handling on a single machine
+
+---
 ## License
 
 MIT (recommended)
@@ -235,4 +250,4 @@ Early-stage / experimental, but functional.
 
 ---
 
-> I got help writing this readme
+> Written with help from you-know-who
