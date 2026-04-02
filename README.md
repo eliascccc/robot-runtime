@@ -37,6 +37,8 @@ to perform screen-based automation. Think of this as the control around the RPA 
 
 ## Job source examples
 
+The orchestrator supports two types of job sources: emails and data.
+
 #### Email-driven job
 A user sends an email → Python validates and prepares the job → writes to `handover.json` → RPA executes UI actions → Python verifies and responds.
 
