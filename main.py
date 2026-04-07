@@ -2953,12 +2953,16 @@ class RobotRuntime:
     """Main orchestration runtime."""
 
     WATCHDOG_TIMEOUT = 10  # demo-friendly watchdog timeout (seconds). Max wait time for RPA tool
+    POLL_INTERVAL = 1   # demo-friendly runtimeloop() poll interval (seconds)
+
     QUERYFLOW_POLLINTERVAL = 1  # demo-friendly query polling interval (seconds)
 
     def __init__(self, ui):
 
         self.prev_ui_status = None
         self.next_queryflow_check_time = 0
+        self.prev_ipc_state: IpcState | None = None
+        self.watchdog_started_at: float | None = None
 
         self.ui = ui
         self.handover_repo = HandoverRepository(self.log_system)
@@ -3019,15 +3023,11 @@ class RobotRuntime:
             self.safestop_controller.recovery_answer()
 
 
-    def run(self) -> None:
+    def runtimeloop(self) -> None:
         active_job = ActiveJob(ipc_state="safestop")
         
         try:          
             self.initialize_runtime()
-            
-            prev_ipc_state = None
-            watchdog_started_at = None
-            poll_interval = 1   # demo-friendly poll interval (seconds)
 
             while True:                
                 active_job = self.handover_repo.read()
@@ -3048,17 +3048,12 @@ class RobotRuntime:
                     self.finalize_current_job(active_job)
 
                 elif ipc_state == "safestop":       # Orchestrator owns the workflow
-                    raise RuntimeError(f"safestop signal (from RPA tool) for job_id: {job_id}")
-                    
+                    raise RuntimeError(f"safestop signal (from RPA tool) for job_id: {job_id}")   
 
-                # track ipc_state transitions
-                watchdog_started_at = self._track_ipc_transitions(watchdog_started_at, prev_ipc_state, ipc_state, job_id)
+                self._track_transitions(ipc_state, job_id)
+                self._enforce_watchdog(ipc_state)
 
-                # watchdog
-                self._watchdog_rpa_tool(watchdog_started_at, ipc_state)
-               
-                prev_ipc_state = ipc_state
-                time.sleep(poll_interval)
+                time.sleep(self.POLL_INTERVAL)
 
 
         except Exception as err_short:  # policy to safe-stop on errors
@@ -3073,12 +3068,12 @@ class RobotRuntime:
         self.ui.tk_set_jobs_done_today(count)
 
 
-    def _track_ipc_transitions(self, watchdog_started_at, prev_ipc_state, ipc_state, job_id):
+    def _track_transitions(self, ipc_state, job_id) -> None:
         
-        if ipc_state != prev_ipc_state:
-            transition_message=f"state transition detected by CPU-poll: {prev_ipc_state} -> {ipc_state}"
+        if ipc_state != self.prev_ipc_state:
+            transition_message=f"state transition detected by CPU-poll: {self.prev_ipc_state} -> {ipc_state}"
 
-            #if not self.handover_repo.is_valid_ipc_transition(prev_ipc_state, ipc_state):
+            #if not self.handover_repo.is_valid_ipc_transition(self.prev_ipc_state, ipc_state):
             #    raise RuntimeError(f"invalid {transition_message}")
 
             self.update_ui_status(ipc_state)
@@ -3091,17 +3086,18 @@ class RobotRuntime:
 
             # note handover time or last RPA tool state transition
             if ipc_state in ("job_queued", "job_running"):
-                watchdog_started_at =  time.time()
+                self.watchdog_started_at =  time.time()
             else:
-                watchdog_started_at = None
+                self.watchdog_started_at = None
         
-        return watchdog_started_at            
 
 
-    def _watchdog_rpa_tool(self, watchdog_started_at, ipc_state):
+    def _enforce_watchdog(self, ipc_state):
+        
+        self.prev_ipc_state = ipc_state
 
         # raise error if RPA tool takes too long (to start or finish)
-        if watchdog_started_at and ipc_state in ("job_queued", "job_running") and time.time() - watchdog_started_at > self.WATCHDOG_TIMEOUT:
+        if self.watchdog_started_at and ipc_state in ("job_queued", "job_running") and time.time() - self.watchdog_started_at > self.WATCHDOG_TIMEOUT:
             error_message=f"No progress in RPA for {self.WATCHDOG_TIMEOUT} seconds"
             
             raise RuntimeError(error_message)
@@ -3266,12 +3262,12 @@ class RobotRuntime:
                 os._exit(0)  #kill if still alive after 3 sec 
 
 def main() -> None:
-    #run dashboard in main thread and 'the rest' in async worker
+    #run dashboard in main thread and 'the rest' async
     ui = DashboardUI()
     robot_runtime = RobotRuntime(ui)
     ui.attach_runtime(robot_runtime)
 
-    threading.Thread(target=robot_runtime.run, daemon=True).start() # 'the rest'
+    threading.Thread(target=robot_runtime.runtimeloop, daemon=True).start() # 'the rest'
     threading.Thread(target=robot_runtime.poll_for_stop_flag, daemon=True).start() # killswitch triggered by RPA tool stop
 
     ui.run()
