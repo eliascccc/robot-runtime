@@ -27,6 +27,8 @@ class RPAToolSimulator:
         self.last_command: str | None = None
 
     def run(self):
+        '''act as RPA_tool according to workflow diagram'''
+        
         self.log_system("RPAToolSimulator alive")
         print("Button 1 and 2 represents the START/RUN and the STOP button in the RPA Tool.")
 
@@ -39,7 +41,7 @@ class RPAToolSimulator:
             # --------------------------------------------------
             # Cold start policy: reset handover.json on startup
             # --------------------------------------------------
-            handover_data = {"ipc_state": "idle"}
+            handover_data = {"state": "idle"}
             with open("handover.json", "w", encoding="utf-8") as f:
                 json.dump(handover_data, f, indent=2)
 
@@ -50,10 +52,10 @@ class RPAToolSimulator:
             print("[started] Press 2 to request stop.")
 
             # --------------------------------------------------
-            #  Enter normal polling loop
+            #  Enter normal loop
             # --------------------------------------------------
             while True:
-                # on operator stop request
+                # on 'stop button'
                 if self.last_command == "2":
                     self.last_command = None
                     Path("stop.flag").write_text("", encoding="utf-8")
@@ -67,14 +69,14 @@ class RPAToolSimulator:
                     with open("handover.json", "r", encoding="utf-8") as f:
                         handover_data = json.load(f)
 
-                    ipc_state = handover_data.get("ipc_state")
-                    if ipc_state != "job_queued":
+                    state = handover_data.get("state")
+                    if state != "job_queued":
                         continue
-                
+                    
                     time.sleep(1)
 
-                # claim workflow if "job_queued"
-                    handover_data["ipc_state"] = "job_running"
+                    # claim workflow if "job_queued"
+                    handover_data["state"] = "job_running"
                     with open("handover.json", "w", encoding="utf-8") as f:
                         json.dump(handover_data, f, indent=2)
 
@@ -99,7 +101,7 @@ class RPAToolSimulator:
                         self.log_system("activities on screen_2 in ERP completed", job_id)
                         self.simulate_rpa_result_job1(erp_order_number, new_qty)
 
-                        new_ipc_state = "job_verifying"
+                        new_state = "job_verifying"
                         
 
                     # JOB3
@@ -111,7 +113,7 @@ class RPAToolSimulator:
                         self.log_system("activities on screen_2 in ERP completed", job_id)
                         self.simulate_rpa_result_job1(erp_order_number, new_qty) # use job1 example         
 
-                        new_ipc_state = "job_verifying"
+                        new_state = "job_verifying"
 
                     # PING
                     elif job_type == "ping":
@@ -122,36 +124,33 @@ class RPAToolSimulator:
                             print("\a", end="", flush=True)
 
                         self.log_system("made a ping", job_id)
-                        new_ipc_state = "job_verifying"
+                        new_state = "job_verifying"
 
                     # UNKNOWN JOB
                     else:
                         self.log_system(f"no logic for job_type={job_type}", job_id)
-                        new_ipc_state = "safestop"
+                        new_state = "safestop"
 
                     # handover back to RobotRuntime
-                    handover_data["ipc_state"] = new_ipc_state
+                    handover_data["state"] = new_state
                     with open("handover.json", "w", encoding="utf-8") as f:
                         json.dump(handover_data, f, indent=2)
 
                     self.log_system(
-                        f"RPAToolSimulator done, ipc_state job_running -> {new_ipc_state}",
+                        f"RPAToolSimulator done, state job_running -> {new_state}",
                         job_id,
                     )
 
                 except Exception as e:
-                    self.log_system(f"crash in polling loop: {e}")
+                    self.log_system(f"crash in loop: {e}")
 
                     try:
-                        handover_data["ipc_state"] = "safestop"
+                        handover_data["state"] = "safestop"
                     except Exception:
-                        handover_data = {"ipc_state": "safestop"}
+                        handover_data = {"state": "safestop"}
 
                     with open("handover.json", "w", encoding="utf-8") as f:
                         json.dump(handover_data, f, indent=2)
-
-                    print("RPA tool entered safestop.")
-                    break
         
 
     def wait_for_command(self, expected: str):

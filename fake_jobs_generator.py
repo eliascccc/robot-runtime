@@ -1,14 +1,9 @@
 from __future__ import annotations
-import random, os, threading, datetime, time, json, uuid, platform
+import random, os, time, uuid
 from pathlib import Path
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid
 from openpyxl import load_workbook #type: ignore
-import os
-import sys
-import subprocess
-import platform
-
 
 class FakeEmailjobsGenerator:
     ''' to create fake email jobs'''
@@ -93,7 +88,12 @@ class FakeEmailjobsGenerator:
             from_email="alice@example.com",
             to_email="robot@company.local",
             subject="PING",
-            body="Hello\nI'm sending you a ping\nBR,\nAlice",
+            body=(
+                "Hello,\n\n"
+                "I'm sending you a ping\n"
+                "BR,\n" 
+                "Alice"
+            )
         )
         return self.write_eml_to_inbox(msg, prefix="ping")
 
@@ -227,19 +227,18 @@ class FakeQueryjobsGenerator:
 
 
 class FakeJobsGenerator:
-    ''' produce random job from above'''
-    def __init__(self) -> None:
+    ''' produce a fake email or a fake query-job at random'''
 
+    def __init__(self) -> None:
         self.fake_emailjob = FakeEmailjobsGenerator()
         self.fake_queryjob = FakeQueryjobsGenerator()
 
 
     def run(self):
-
         while True:
             try:
                 input("\nHit Enter to generate an random job")
-                if random.randint(0,2) <= 1:
+                if random.randint(0,3) <= 2:
                     path = self.fake_emailjob.create_random_mail()
                     print(f"Created emailjob: {path.name}")
                 else:
@@ -259,7 +258,8 @@ def main():
     if not os.path.isfile("main.py"):
         raise RuntimeError("Place this file in main.py directory")
 
-    fakejobs_generator = FakeJobsGenerator() # replace with real sources
-    fakejobs_generator.run()
+    FakeJobsGenerator().run()
 
-main()
+
+if __name__ == "__main__":
+    main()
